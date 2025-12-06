@@ -1,4 +1,4 @@
-# GitHub Copilot instructions for zenplay
+# GitHub Copilot instructions for zenremote
 
 Purpose: provide concise, actionable guidance so Copilot suggestions match this project's conventions, dependencies, and architecture.
 

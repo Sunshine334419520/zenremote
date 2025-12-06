@@ -145,7 +145,7 @@ list(APPEND SRC_FILES ${PLAYER_STATS_FILES})
 list(APPEND SRC_FILES ${VIEW_FILES})
 
 # resource files
-# set(QRC_FILES resources/zenplay.qrc)
+# set(QRC_FILES resources/zenremote.qrc)
 
 # Windows 控制台配置
 # Debug 模式：显示控制台窗口（方便查看日志）

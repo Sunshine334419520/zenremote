@@ -15,13 +15,13 @@ class ZenPlayConan(ConanFile):
         #del self.settings.compiler.cppstd  # Remove cppstd to avoid conflicts with Qt
 
     def requirements(self):
-        self.requires("nlohmann_json/3.12.0")
+        self.requires("nlohmann_json/[^3.12.0]")
         self.requires("qt/6.7.3")
         self.requires("sdl/2.32.2")
         self.requires("ffmpeg/7.1.1")
-        self.requires("spdlog/1.15.1")
+        self.requires("spdlog/[^1.15.1]")
         self.requires("gtest/1.17.0")
-        self.requires("fmt/12.0.0")
+        self.requires("fmt/[^11.1.3]")
     def layout(self):
         cmake_layout(self)
     
