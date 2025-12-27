@@ -10,83 +10,144 @@ namespace zenremote {
 /**
  * @brief 统一的错误码枚举
  *
- * 用于跨模块的错误传播，支持区分可恢复错误与致命错误。
- * 范围规划：
- *   0-99: 通用错误
- *   100-199: 解封装/IO 相关错误
- *   200-299: 解码相关错误
- *   300-399: 渲染相关错误
- *   400-499: 音频相关错误
- *   500-599: 网络相关错误
- *   600-699: 同步相关错误
- *   700-799: 系统相关错误
+ * 设计原则：
+ * - 按功能模块分类，便于快速定位问题
+ * - 每个模块预留足够的码位供后续扩展
+ * - 0 表示成功，便于 C 风格 API 兼容
+ *
+ * 码位规划：
+ *   0: 成功
+ *   1-99: 通用错误
+ *   100-199: 网络连接层 (Connection/Socket)
+ *   200-299: 网络协议层 (RTP/Reliable/Handshake)
+ *   300-399: 传输层 (MediaTrack/DataChannel/PeerConnection)
+ *   400-499: 媒体采集层 (ScreenCapturer/AudioCapture)
+ *   500-599: 编解码层 (Encoder/Decoder)
+ *   600-699: 音频处理层 (AudioDevice/Resampler)
+ *   700-799: 系统资源层 (Memory/Thread/System)
+ *   800-899: 配置层 (Config/Parameter)
  */
 enum class ErrorCode : int {
-  // 通用错误（0-99）
-  kSuccess = 0,           ///< 成功
-  kInvalidParameter = 1,  ///< 无效参数
-  kNotInitialized = 2,    ///< 未初始化
-  kAlreadyRunning = 3,    ///< 已在运行中
-  kConfigError = 4,       ///< 配置错误
-  kFileError = 5,         ///< 文件操作错误
-  kUnknown = 99,          ///< 未知错误
+  // ============ 成功与通用错误 (0-99) ============
+  kSuccess = 0,             ///< 操作成功
+  kInvalidParameter = 1,    ///< 参数无效
+  kNotInitialized = 2,      ///< 模块未初始化
+  kAlreadyInitialized = 3,  ///< 模块已初始化
+  kAlreadyRunning = 4,      ///< 已在运行
+  kNotRunning = 5,          ///< 未在运行
+  kInvalidState = 6,        ///< 无效状态转换
+  kInvalidOperation = 7,    ///< 无效操作
+  kNotImplemented = 8,      ///< 功能未实现
+  kNotSupported = 9,        ///< 不支持的功能
+  kUnknown = 99,            ///< 未知错误
 
-  // 解封装/IO 错误（100-199）
-  kIOError = 100,           ///< IO 错误（通用）
-  kInvalidFormat = 101,     ///< 无效的文件格式
-  kStreamNotFound = 102,    ///< 指定流未找到
-  kDemuxError = 103,        ///< 解封装错误
-  kFileNotFound = 104,      ///< 文件不存在
-  kFileAccessDenied = 105,  ///< 文件访问被拒绝
-  kEndOfFile = 106,         ///< 文件结束
-  kDemuxerNotFound = 107,   ///< 解封装器未找到
+  // ============ 网络连接层 (100-199) ============
+  kNetworkError = 100,         ///< 网络通用错误
+  kConnectionTimeout = 101,    ///< 连接超时
+  kConnectionRefused = 102,    ///< 连接被拒绝
+  kConnectionFailed = 103,     ///< 连接失败
+  kNetworkUnreachable = 104,   ///< 网络不可达
+  kSocketError = 105,          ///< Socket 错误
+  kSocketBindFailed = 106,     ///< Socket 绑定失败
+  kSocketListenFailed = 107,   ///< Socket 监听失败
+  kSocketConnectFailed = 108,  ///< Socket 连接失败
+  kSocketSendFailed = 109,     ///< Socket 发送失败
+  kSocketRecvFailed = 110,     ///< Socket 接收失败
+  kDNSLookupFailed = 111,      ///< DNS 查询失败
+  kInvalidAddress = 112,       ///< 无效的地址
+  kPortUnavailable = 113,      ///< 端口不可用
 
-  // 解码错误（200-299）
-  kDecoderError = 200,               ///< 解码器错误
-  kDecoderNotFound = 201,            ///< 未找到合适的解码器
-  kUnsupportedCodec = 202,           ///< 不支持的编码格式
-  kDecoderInitFailed = 203,          ///< 解码器初始化失败
-  kDecoderSendFrameFailed = 204,     ///< 发送数据包到解码器失败
-  kDecoderReceiveFrameFailed = 205,  ///< 从解码器接收帧失败
-  kEncoderNotFound = 206,            ///< 编码器未找到
+  // ============ 网络协议层 (200-299) ============
+  kProtocolError = 200,           ///< 协议错误
+  kRTPError = 201,                ///< RTP 错误
+  kRTPHeaderInvalid = 202,        ///< RTP 头无效
+  kRTPPayloadInvalid = 203,       ///< RTP 负载无效
+  kRTPSequenceError = 204,        ///< RTP 序列号错误
+  kHandshakeFailed = 205,         ///< 握手失败
+  kHandshakeTimeout = 206,        ///< 握手超时
+  kReliableTransportError = 207,  ///< 可靠传输错误
+  kPacketLoss = 208,              ///< 包丢失
+  kPacketOutOfOrder = 209,        ///< 包乱序
+  kBufferOverflow = 210,          ///< 缓冲区溢出
+  kBufferUnderflow = 211,         ///< 缓冲区不足
+  kJitterBufferError = 212,       ///< 抖动缓冲区错误
 
-  // 渲染错误（300-399）
-  kRenderError = 300,          ///< 渲染错误
-  kInvalidRenderTarget = 301,  ///< 无效的渲染目标
-  kRenderContextLost = 302,    ///< 渲染上下文丢失
-  kTextureCreateFailed = 303,  ///< 纹理创建失败
-  kRenderViewportError = 304,  ///< 视口设置错误
+  // ============ 传输层 (300-399) ============
+  kTransportError = 300,       ///< 传输层通用错误
+  kMediaTrackError = 301,      ///< 媒体轨道错误
+  kAudioTrackError = 302,      ///< 音频轨道错误
+  kVideoTrackError = 303,      ///< 视频轨道错误
+  kDataChannelError = 304,     ///< 数据通道错误
+  kPeerConnectionError = 305,  ///< 对等连接错误
+  kTrackDisabled = 306,        ///< 轨道已禁用
+  kTrackNotConnected = 307,    ///< 轨道未连接
+  kChannelClosed = 308,        ///< 通道已关闭
+  kChannelFull = 309,          ///< 通道已满
 
-  // 音频错误（400-499）
-  kAudioError = 400,               ///< 音频错误
-  kAudioOutputError = 401,         ///< 音频输出错误
-  kAudioFormatNotSupported = 402,  ///< 不支持的音频格式
-  kAudioResampleError = 403,       ///< 重采样错误
-  kAudioDeviceNotFound = 404,      ///< 音频设备未找到
-  kAudioInitFailed = 405,          ///< 音频设备初始化失败
-  kAudioNotInitialized = 406,      ///< 音频未初始化
-  kAudioAlreadyInitialized = 407,  ///< 音频已初始化
+  // ============ 媒体采集层 (400-499) ============
+  kCaptureError = 400,              ///< 采集通用错误
+  kScreenCapturerError = 401,       ///< 屏幕采集错误
+  kScreenCapturerInitFailed = 402,  ///< 屏幕采集初始化失败
+  kDXGIError = 403,                 ///< DXGI 错误
+  kDesktopDuplicationError = 404,   ///< 桌面复制错误
+  kAudioCaptureError = 405,         ///< 音频采集错误
+  kCaptureFormatInvalid = 406,      ///< 采集格式无效
+  kCaptureResolutionInvalid = 407,  ///< 采集分辨率无效
+  kCaptureTimeoutError = 408,       ///< 采集超时
 
-  // 网络错误（500-599）
-  kNetworkError = 500,        ///< 网络错误
-  kConnectionTimeout = 501,   ///< 连接超时
-  kConnectionRefused = 502,   ///< 连接被拒绝
-  kInvalidUrl = 503,          ///< 无效的 URL
-  kNetworkUnreachable = 504,  ///< 网络不可达
-  kNetworkTimeout = 505,      ///< 网络超时
+  // ============ 编解码层 (500-599) ============
+  kCodecError = 500,              ///< 编解码通用错误
+  kEncoderError = 501,            ///< 编码器错误
+  kEncoderNotFound = 502,         ///< 未找到编码器
+  kEncoderInitFailed = 503,       ///< 编码器初始化失败
+  kEncodeFailed = 504,            ///< 编码失败
+  kDecoderError = 505,            ///< 解码器错误
+  kDecoderNotFound = 506,         ///< 未找到解码器
+  kDecoderInitFailed = 507,       ///< 解码器初始化失败
+  kDecodeFailed = 508,            ///< 解码失败
+  kUnsupportedCodec = 509,        ///< 不支持的编码格式
+  kUnsupportedPixelFormat = 510,  ///< 不支持的像素格式
+  kInvalidBitrate = 511,          ///< 无效的比特率
+  kInvalidFrameRate = 512,        ///< 无效的帧率
 
-  // 同步相关错误（600-699）
-  kSyncError = 600,   ///< 同步错误
-  kClockError = 601,  ///< 时钟错误
+  // ============ 音频处理层 (600-699) ============
+  kAudioError = 600,                     ///< 音频通用错误
+  kAudioDeviceError = 601,               ///< 音频设备错误
+  kAudioDeviceNotFound = 602,            ///< 音频设备未找到
+  kAudioDeviceNotInitialized = 603,      ///< 音频设备未初始化
+  kAudioDeviceAlreadyInitialized = 604,  ///< 音频设备已初始化
+  kAudioOutputError = 605,               ///< 音频输出错误
+  kAudioFormatNotSupported = 606,        ///< 不支持的音频格式
+  kAudioResampleError = 607,             ///< 重采样错误
+  kAudioBufferError = 608,               ///< 音频缓冲区错误
 
-  // 系统错误（700-799）
-  kSystemError = 700,     ///< 系统错误
-  kOutOfMemory = 701,     ///< 内存不足
-  kThreadError = 702,     ///< 线程错误
-  kTimeout = 703,         ///< 操作超时
-  kInternalError = 704,   ///< 内部错误
-  kBufferTooSmall = 705,  ///< 缓冲区太小
-  kNotSupported = 706,    ///< 不支持的操作
+  // ============ 系统资源层 (700-799) ============
+  kSystemError = 700,         ///< 系统通用错误
+  kOutOfMemory = 701,         ///< 内存不足
+  kThreadError = 702,         ///< 线程错误
+  kThreadCreateFailed = 703,  ///< 线程创建失败
+  kTimeout = 704,             ///< 操作超时
+  kInternalError = 705,       ///< 内部错误
+  kResourceExhausted = 706,   ///< 资源耗尽
+  kPermissionDenied = 707,    ///< 权限被拒绝
+  kIOError = 708,             ///< IO 错误
+  kFileNotFound = 709,        ///< 文件不存在
+  kFileAccessDenied = 710,    ///< 文件访问被拒绝
+
+  // ============ 配置层 (800-899) ============
+  kConfigError = 800,            ///< 配置错误
+  kConfigInvalid = 801,          ///< 配置无效
+  kConfigNotFound = 802,         ///< 配置未找到
+  kConfigVersionMismatch = 803,  ///< 配置版本不匹配
+
+  // ============ FFmpeg 相关 (900-999) ============
+  kEndOfFile = 900,        ///< 文件结束
+  kInvalidFormat = 901,    ///< 无效格式
+  kDemuxerNotFound = 902,  ///< 解混器未找到
+  kStreamNotFound = 903,   ///< 流未找到
+  kNetworkTimeout = 904,   ///< 网络超时
+  kBufferTooSmall = 905,   ///< 缓冲区太小
+  kRenderError = 906,      ///< 渲染错误
 };
 
 /**
@@ -94,121 +155,227 @@ enum class ErrorCode : int {
  */
 inline const char* ErrorCodeToString(ErrorCode code) {
   switch (code) {
-    // 通用
+    // 成功与通用
     case ErrorCode::kSuccess:
       return "Success";
     case ErrorCode::kInvalidParameter:
       return "InvalidParameter";
     case ErrorCode::kNotInitialized:
       return "NotInitialized";
+    case ErrorCode::kAlreadyInitialized:
+      return "AlreadyInitialized";
     case ErrorCode::kAlreadyRunning:
       return "AlreadyRunning";
-    case ErrorCode::kConfigError:
-      return "ConfigError";
-    case ErrorCode::kFileError:
-      return "FileError";
+    case ErrorCode::kNotRunning:
+      return "NotRunning";
+    case ErrorCode::kInvalidState:
+      return "InvalidState";
+    case ErrorCode::kInvalidOperation:
+      return "InvalidOperation";
+    case ErrorCode::kNotImplemented:
+      return "NotImplemented";
+    case ErrorCode::kNotSupported:
+      return "NotSupported";
     case ErrorCode::kUnknown:
       return "Unknown";
 
-    // 解封装/IO
-    case ErrorCode::kIOError:
-      return "IOError";
-    case ErrorCode::kInvalidFormat:
-      return "InvalidFormat";
-    case ErrorCode::kStreamNotFound:
-      return "StreamNotFound";
-    case ErrorCode::kDemuxError:
-      return "DemuxError";
-    case ErrorCode::kFileNotFound:
-      return "FileNotFound";
-    case ErrorCode::kFileAccessDenied:
-      return "FileAccessDenied";
-    case ErrorCode::kEndOfFile:
-      return "EndOfFile";
-    case ErrorCode::kDemuxerNotFound:
-      return "DemuxerNotFound";
-
-    // 解码
-    case ErrorCode::kDecoderError:
-      return "DecoderError";
-    case ErrorCode::kDecoderNotFound:
-      return "DecoderNotFound";
-    case ErrorCode::kUnsupportedCodec:
-      return "UnsupportedCodec";
-    case ErrorCode::kDecoderInitFailed:
-      return "DecoderInitFailed";
-    case ErrorCode::kDecoderSendFrameFailed:
-      return "DecoderSendFrameFailed";
-    case ErrorCode::kDecoderReceiveFrameFailed:
-      return "DecoderReceiveFrameFailed";
-    case ErrorCode::kEncoderNotFound:
-      return "EncoderNotFound";
-
-    // 渲染
-    case ErrorCode::kRenderError:
-      return "RenderError";
-    case ErrorCode::kInvalidRenderTarget:
-      return "InvalidRenderTarget";
-    case ErrorCode::kRenderContextLost:
-      return "RenderContextLost";
-    case ErrorCode::kTextureCreateFailed:
-      return "TextureCreateFailed";
-    case ErrorCode::kRenderViewportError:
-      return "RenderViewportError";
-
-    // 音频
-    case ErrorCode::kAudioError:
-      return "AudioError";
-    case ErrorCode::kAudioOutputError:
-      return "AudioOutputError";
-    case ErrorCode::kAudioFormatNotSupported:
-      return "AudioFormatNotSupported";
-    case ErrorCode::kAudioResampleError:
-      return "AudioResampleError";
-    case ErrorCode::kAudioDeviceNotFound:
-      return "AudioDeviceNotFound";
-    case ErrorCode::kAudioInitFailed:
-      return "AudioInitFailed";
-    case ErrorCode::kAudioNotInitialized:
-      return "AudioNotInitialized";
-    case ErrorCode::kAudioAlreadyInitialized:
-      return "AudioAlreadyInitialized";
-
-    // 网络
+    // 网络连接层
     case ErrorCode::kNetworkError:
       return "NetworkError";
     case ErrorCode::kConnectionTimeout:
       return "ConnectionTimeout";
     case ErrorCode::kConnectionRefused:
       return "ConnectionRefused";
-    case ErrorCode::kInvalidUrl:
-      return "InvalidUrl";
+    case ErrorCode::kConnectionFailed:
+      return "ConnectionFailed";
     case ErrorCode::kNetworkUnreachable:
       return "NetworkUnreachable";
-    case ErrorCode::kNetworkTimeout:
-      return "NetworkTimeout";
+    case ErrorCode::kSocketError:
+      return "SocketError";
+    case ErrorCode::kSocketBindFailed:
+      return "SocketBindFailed";
+    case ErrorCode::kSocketListenFailed:
+      return "SocketListenFailed";
+    case ErrorCode::kSocketConnectFailed:
+      return "SocketConnectFailed";
+    case ErrorCode::kSocketSendFailed:
+      return "SocketSendFailed";
+    case ErrorCode::kSocketRecvFailed:
+      return "SocketRecvFailed";
+    case ErrorCode::kDNSLookupFailed:
+      return "DNSLookupFailed";
+    case ErrorCode::kInvalidAddress:
+      return "InvalidAddress";
+    case ErrorCode::kPortUnavailable:
+      return "PortUnavailable";
 
-    // 同步
-    case ErrorCode::kSyncError:
-      return "SyncError";
-    case ErrorCode::kClockError:
-      return "ClockError";
+    // 网络协议层
+    case ErrorCode::kProtocolError:
+      return "ProtocolError";
+    case ErrorCode::kRTPError:
+      return "RTPError";
+    case ErrorCode::kRTPHeaderInvalid:
+      return "RTPHeaderInvalid";
+    case ErrorCode::kRTPPayloadInvalid:
+      return "RTPPayloadInvalid";
+    case ErrorCode::kRTPSequenceError:
+      return "RTPSequenceError";
+    case ErrorCode::kHandshakeFailed:
+      return "HandshakeFailed";
+    case ErrorCode::kHandshakeTimeout:
+      return "HandshakeTimeout";
+    case ErrorCode::kReliableTransportError:
+      return "ReliableTransportError";
+    case ErrorCode::kPacketLoss:
+      return "PacketLoss";
+    case ErrorCode::kPacketOutOfOrder:
+      return "PacketOutOfOrder";
+    case ErrorCode::kBufferOverflow:
+      return "BufferOverflow";
+    case ErrorCode::kBufferUnderflow:
+      return "BufferUnderflow";
+    case ErrorCode::kJitterBufferError:
+      return "JitterBufferError";
 
-    // 系统
+    // 传输层
+    case ErrorCode::kTransportError:
+      return "TransportError";
+    case ErrorCode::kMediaTrackError:
+      return "MediaTrackError";
+    case ErrorCode::kAudioTrackError:
+      return "AudioTrackError";
+    case ErrorCode::kVideoTrackError:
+      return "VideoTrackError";
+    case ErrorCode::kDataChannelError:
+      return "DataChannelError";
+    case ErrorCode::kPeerConnectionError:
+      return "PeerConnectionError";
+    case ErrorCode::kTrackDisabled:
+      return "TrackDisabled";
+    case ErrorCode::kTrackNotConnected:
+      return "TrackNotConnected";
+    case ErrorCode::kChannelClosed:
+      return "ChannelClosed";
+    case ErrorCode::kChannelFull:
+      return "ChannelFull";
+
+    // 媒体采集层
+    case ErrorCode::kCaptureError:
+      return "CaptureError";
+    case ErrorCode::kScreenCapturerError:
+      return "ScreenCapturerError";
+    case ErrorCode::kScreenCapturerInitFailed:
+      return "ScreenCapturerInitFailed";
+    case ErrorCode::kDXGIError:
+      return "DXGIError";
+    case ErrorCode::kDesktopDuplicationError:
+      return "DesktopDuplicationError";
+    case ErrorCode::kAudioCaptureError:
+      return "AudioCaptureError";
+    case ErrorCode::kCaptureFormatInvalid:
+      return "CaptureFormatInvalid";
+    case ErrorCode::kCaptureResolutionInvalid:
+      return "CaptureResolutionInvalid";
+    case ErrorCode::kCaptureTimeoutError:
+      return "CaptureTimeoutError";
+
+    // 编解码层
+    case ErrorCode::kCodecError:
+      return "CodecError";
+    case ErrorCode::kEncoderError:
+      return "EncoderError";
+    case ErrorCode::kEncoderNotFound:
+      return "EncoderNotFound";
+    case ErrorCode::kEncoderInitFailed:
+      return "EncoderInitFailed";
+    case ErrorCode::kEncodeFailed:
+      return "EncodeFailed";
+    case ErrorCode::kDecoderError:
+      return "DecoderError";
+    case ErrorCode::kDecoderNotFound:
+      return "DecoderNotFound";
+    case ErrorCode::kDecoderInitFailed:
+      return "DecoderInitFailed";
+    case ErrorCode::kDecodeFailed:
+      return "DecodeFailed";
+    case ErrorCode::kUnsupportedCodec:
+      return "UnsupportedCodec";
+    case ErrorCode::kUnsupportedPixelFormat:
+      return "UnsupportedPixelFormat";
+    case ErrorCode::kInvalidBitrate:
+      return "InvalidBitrate";
+    case ErrorCode::kInvalidFrameRate:
+      return "InvalidFrameRate";
+
+    // 音频处理层
+    case ErrorCode::kAudioError:
+      return "AudioError";
+    case ErrorCode::kAudioDeviceError:
+      return "AudioDeviceError";
+    case ErrorCode::kAudioDeviceNotFound:
+      return "AudioDeviceNotFound";
+    case ErrorCode::kAudioDeviceNotInitialized:
+      return "AudioDeviceNotInitialized";
+    case ErrorCode::kAudioDeviceAlreadyInitialized:
+      return "AudioDeviceAlreadyInitialized";
+    case ErrorCode::kAudioOutputError:
+      return "AudioOutputError";
+    case ErrorCode::kAudioFormatNotSupported:
+      return "AudioFormatNotSupported";
+    case ErrorCode::kAudioResampleError:
+      return "AudioResampleError";
+    case ErrorCode::kAudioBufferError:
+      return "AudioBufferError";
+
+    // 系统资源层
     case ErrorCode::kSystemError:
       return "SystemError";
     case ErrorCode::kOutOfMemory:
       return "OutOfMemory";
     case ErrorCode::kThreadError:
       return "ThreadError";
+    case ErrorCode::kThreadCreateFailed:
+      return "ThreadCreateFailed";
     case ErrorCode::kTimeout:
       return "Timeout";
     case ErrorCode::kInternalError:
       return "InternalError";
+    case ErrorCode::kResourceExhausted:
+      return "ResourceExhausted";
+    case ErrorCode::kPermissionDenied:
+      return "PermissionDenied";
+    case ErrorCode::kIOError:
+      return "IOError";
+    case ErrorCode::kFileNotFound:
+      return "FileNotFound";
+    case ErrorCode::kFileAccessDenied:
+      return "FileAccessDenied";
+
+    // 配置层
+    case ErrorCode::kConfigError:
+      return "ConfigError";
+    case ErrorCode::kConfigInvalid:
+      return "ConfigInvalid";
+    case ErrorCode::kConfigNotFound:
+      return "ConfigNotFound";
+    case ErrorCode::kConfigVersionMismatch:
+      return "ConfigVersionMismatch";
+
+    // FFmpeg 相关
+    case ErrorCode::kEndOfFile:
+      return "EndOfFile";
+    case ErrorCode::kInvalidFormat:
+      return "InvalidFormat";
+    case ErrorCode::kDemuxerNotFound:
+      return "DemuxerNotFound";
+    case ErrorCode::kStreamNotFound:
+      return "StreamNotFound";
+    case ErrorCode::kNetworkTimeout:
+      return "NetworkTimeout";
     case ErrorCode::kBufferTooSmall:
       return "BufferTooSmall";
-    case ErrorCode::kNotSupported:
-      return "NotSupported";
+    case ErrorCode::kRenderError:
+      return "RenderError";
 
     default:
       return "UnknownErrorCode";

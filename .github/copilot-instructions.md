@@ -30,7 +30,7 @@ Commit & PR guidance for Copilot suggestions
 - For behavioral changes, include a short rationale comment in the top of the modified file explaining the why.
 
 Examples of helpful completions
-- Implementations for TODOs present in `src/player/` that follow existing patterns (open/close lifecycle, error cleanup, thread lifecycle management).
+- Implementations for TODOs present in `src/` that follow existing patterns (open/close lifecycle, error cleanup, thread lifecycle management).
 - Small refactors that remove duplicated cleanup code by extracting helpers.
 
 Examples of bad completions to avoid

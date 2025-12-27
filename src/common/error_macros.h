@@ -1,6 +1,6 @@
 #pragma once
 
-#include "player/common/error.h"
+#include "common/error.h"
 
 /**
  * @file error_macros.h

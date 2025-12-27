@@ -1,12 +1,13 @@
 #include <QApplication>
 #include <QDir>
 #include <QFile>
+#include <QPalette>
 #include <QStyleFactory>
 #include <QTextStream>
 
+#include "common/log_manager.h"
 #include "loki/src/main_message_loop_with_not_main_thread.h"
 #include "loki/src/threading/loki_thread.h"
-#include "player/common/log_manager.h"
 
 // Loki主消息循环代理
 class ZenPlayMessageLoopDelegate : public loki::MainMessageLoop::Delegate {
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]) {
   //     ZENPLAY_WARN("Continuing without statistics system");
   //   }
 
-  ZENPLAY_INFO("Starting ZenRemote Media Player v1.0.0");
+  ZENREMOTE_INFO("Starting ZenRemote Media Player v1.0.0");
 
   // Set application properties
   app.setApplicationName("ZenRemote");
@@ -80,7 +81,7 @@ int main(int argc, char* argv[]) {
   }
 
   // 初始化loki消息循环
-  ZENPLAY_INFO("Initializing Loki message loop");
+  ZENREMOTE_INFO(LOG_MODULE_PLAYER, "Initializing Loki message loop");
   ZenPlayMessageLoopDelegate delegate;
   loki::MainMessageLoopWithNotMainThread message_loop_with_not_main_thread(
       &delegate);
@@ -91,15 +92,15 @@ int main(int argc, char* argv[]) {
   //   InitializeConfigSystem();
 
   //   // 创建主窗口并显示
-  //   ZENPLAY_INFO("Creating main window");
-  //   zenremote::MainWindow window;
+  //   zenplay_info("creating main window");
+  //   zenremote::mainwindow window;
   //   window.show();
 
-  ZENPLAY_INFO("Application started successfully");
+  ZENREMOTE_INFO(LOG_MODULE_PLAYER, "Application started successfully");
   int result = app.exec();
 
-  ZENPLAY_INFO("Application exiting");
-  zenremote::stats::ShutdownStatsSystem();
+  ZENREMOTE_INFO(LOG_MODULE_PLAYER, "Application exiting");
+  //   zenremote::stats::ShutdownStatsSystem();
   zenremote::LogManager::Shutdown();
 
   return result;

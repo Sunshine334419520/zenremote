@@ -7,7 +7,7 @@
 
 #include <string>
 
-#include "player/common/error.h"
+#include "common/error.h"
 
 namespace zenremote {
 
@@ -36,8 +36,8 @@ namespace zenremote {
  * - S_OK → ErrorCode::kSuccess
  * - E_INVALIDARG → ErrorCode::kInvalidParameter
  * - E_OUTOFMEMORY → ErrorCode::kOutOfMemory
- * - AUDCLNT_E_DEVICE_INVALIDATED → ErrorCode::kAudioDeviceNotFound
- * - 其他 → ErrorCode::kAudioInitFailed
+ * - AUDCLNT_E_DEVICE_INVALIDATED → ErrorCode::kAudioDeviceError
+ * - 其他 → ErrorCode::kAudioError
  */
 ErrorCode MapHRESULT(HRESULT hr);
 

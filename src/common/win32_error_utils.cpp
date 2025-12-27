@@ -1,4 +1,4 @@
-#include "player/common/win32_error_utils.h"
+#include "common/win32_error_utils.h"
 
 #ifdef OS_WIN
 
@@ -31,31 +31,31 @@ ErrorCode MapHRESULT(HRESULT hr) {
       return ErrorCode::kInvalidParameter;
 
     case E_NOTIMPL:
-      return ErrorCode::kNotSupported;
+      return ErrorCode::kNotImplemented;
 
     case E_FAIL:
       return ErrorCode::kInternalError;
 
     case E_ACCESSDENIED:
-      return ErrorCode::kFileAccessDenied;
+      return ErrorCode::kPermissionDenied;
 
     // WASAPI 特定错误
     case AUDCLNT_E_NOT_INITIALIZED:
-      return ErrorCode::kAudioNotInitialized;
+      return ErrorCode::kAudioDeviceNotInitialized;
 
     case AUDCLNT_E_ALREADY_INITIALIZED:
-      return ErrorCode::kAudioAlreadyInitialized;
+      return ErrorCode::kAudioDeviceAlreadyInitialized;
 
     case AUDCLNT_E_DEVICE_INVALIDATED:
     case AUDCLNT_E_DEVICE_IN_USE:
-      return ErrorCode::kAudioDeviceNotFound;
+      return ErrorCode::kAudioDeviceError;
 
     case AUDCLNT_E_UNSUPPORTED_FORMAT:
       return ErrorCode::kAudioFormatNotSupported;
 
     case AUDCLNT_E_BUFFER_TOO_LARGE:
     case AUDCLNT_E_BUFFER_SIZE_ERROR:
-      return ErrorCode::kBufferTooSmall;
+      return ErrorCode::kAudioBufferError;
 
     case AUDCLNT_E_OUT_OF_ORDER:
     case AUDCLNT_E_WRONG_ENDPOINT_TYPE:
@@ -67,11 +67,11 @@ ErrorCode MapHRESULT(HRESULT hr) {
       return ErrorCode::kAudioDeviceNotFound;
 
     case AUDCLNT_E_EXCLUSIVE_MODE_NOT_ALLOWED:
-      return ErrorCode::kAudioInitFailed;
+      return ErrorCode::kAudioOutputError;
 
     // 其他未知错误
     default:
-      return ErrorCode::kAudioInitFailed;
+      return ErrorCode::kAudioError;
   }
 }
 

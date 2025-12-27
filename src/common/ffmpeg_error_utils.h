@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "player/common/error.h"
+#include "common/error.h"
 
 extern "C" {
 #include <libavutil/error.h>

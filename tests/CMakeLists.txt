@@ -12,29 +12,23 @@ set(PLAYER_SOURCES
     # 如果有其他 .cpp 文件需要添加
     
     # 错误处理系统
-    ${CMAKE_SOURCE_DIR}/src/player/common/error.cpp
-    ${CMAKE_SOURCE_DIR}/src/player/common/ffmpeg_error_utils.cpp
-    
-    # AVSyncController
-    ${CMAKE_SOURCE_DIR}/src/player/sync/av_sync_controller.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/error.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/ffmpeg_error_utils.cpp
     
     # 日志管理（AVSyncController 依赖）
-    ${CMAKE_SOURCE_DIR}/src/player/common/log_manager.cpp
-    
-    # 统计管理（AVSyncController 依赖）
-    ${CMAKE_SOURCE_DIR}/src/player/stats/statistics_manager.cpp
-    
-    # PlayerStateManager（WaitForResume 测试依赖）
-    ${CMAKE_SOURCE_DIR}/src/player/common/player_state_manager.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/log_manager.cpp
     
     # 其他依赖（根据实际情况添加）
-    ${CMAKE_SOURCE_DIR}/src/player/common/timer.cpp
+    ${CMAKE_SOURCE_DIR}/src/common/timer.cpp
+    
+    # 媒体采集
+    ${CMAKE_SOURCE_DIR}/src/media/capture/screen_capturer_win.cpp
 )
 
 # Windows 平台专用源文件
 if (WIN32)
     list(APPEND PLAYER_SOURCES
-        ${CMAKE_SOURCE_DIR}/src/player/common/win32_error_utils.cpp
+        ${CMAKE_SOURCE_DIR}/src/common/win32_error_utils.cpp
     )
 endif()
 
@@ -43,10 +37,9 @@ set(TEST_SOURCES
     test_main.cpp
     test_result_error.cpp
     test_thread_safe_queue.cpp
-    test_av_sync_controller.cpp
     test_blocking_queue.cpp
-    test_player_state_manager_wait_resume.cpp
     test_error_utils.cpp
+    test_screen_capturer.cpp
 )
 
 # Windows 平台专用测试文件

@@ -101,48 +101,44 @@ endif()
 
 # src files
 file(GLOB SRC_FILES "src/main.cpp")
-file(GLOB PLAYER_MAIN_FILES 
-    "src/player/zen_player.cpp"
-    "src/player/zen_player.h"
-    "src/player/playback_controller.h"
-    "src/player/playback_controller.cpp")
-file(GLOB PLAYER_COMMON_FILES
-    "src/player/common/*.cpp"
-    "src/player/common/*.h"
+# file(GLOB MAIN_FILES 
+#    "src/player/zen_player.cpp"
+#    "src/player/zen_player.h"
+#    "src/player/playback_controller.h"
+#    "src/player/playback_controller.cpp")
+file(GLOB COMMON_FILES
+    "src/common/*.cpp"
+    "src/common/*.h"
 )
 file(GLOB PLAYER_CONFIG_FILES
-    "src/player/config/*.cpp"
-    "src/player/config/*.h"
+    "src/config/*.cpp"
+    "src/config/*.h"
 )
-file(GLOB_RECURSE PLAYER_CODEC_FILES "src/player/codec/*.cpp" "src/player/codec/*.h")
-file(GLOB_RECURSE PLAYER_DEMUXER_FILES "src/player/demuxer/*.cpp" "src/player/demuxer/*.h")
-file(GLOB PLAYER_AUDIO_OUTPUT_FILES "src/player/audio/*.cpp" "src/player/audio/*.h")
-file(GLOB_RECURSE PLAYER_VIDEO_FILES "src/player/video/*.cpp" "src/player/video/*.h")
-file(GLOB_RECURSE PLAYER_SYNC_FILES "src/player/sync/*.cpp" "src/player/sync/*.h")
-file(GLOB_RECURSE PLAYER_LOADER_FILES "src/player/loader/*.cpp" "src/player/loader/*.h")
-file(GLOB_RECURSE PLAYER_STATS_FILES "src/player/stats/*.cpp" "src/player/stats/*.h")
-file(GLOB_RECURSE VIEW_FILES "src/view/*.cpp" "src/view/*.h" "src/view/*.ui")
 
-if (WIN32)
-    list(APPEND PLAYER_AUDIO_OUTPUT_FILES "src/player/audio/impl/wasapi_audio_output.cpp" "src/player/audio/impl/wasapi_audio_output.h")
-elseif(APPLE)
-    list(APPEND PLAYER_AUDIO_OUTPUT_FILES "src/player/audio/impl/core_audio_output.mm" "src/player/audio/impl/core_audio_output.h")
-elseif(UNIX)
-    list(APPEND PLAYER_AUDIO_OUTPUT_FILES "src/player/audio/impl/alsa_audio_output.cpp" "src/player/audio/impl/alsa_audio_output.h")
-endif()
+# Application layer (session + ui)
+file(GLOB_RECURSE APP_FILES "src/app/*.cpp" "src/app/*.h" "src/app/*.ui")
+
+# Transport layer (transmission abstractions)
+file(GLOB_RECURSE TRANSPORT_FILES "src/transport/*.cpp" "src/transport/*.h")
+
+# Network layer (network implementation)
+file(GLOB_RECURSE NETWORK_FILES "src/network/*.cpp" "src/network/*.h")
+
+# Other layers
+file(GLOB_RECURSE CONTROL_FILES "src/control/*.cpp" "src/control/*.h")
+file(GLOB_RECURSE CORE_FILES "src/core/*.cpp" "src/core/*.h")
+file(GLOB_RECURSE MEDIA_FILES "src/media/*.cpp" "src/media/*.h")
 
 
-list(APPEND SRC_FILES ${PLAYER_MAIN_FILES})
-list(APPEND SRC_FILES ${PLAYER_COMMON_FILES})
-list(APPEND SRC_FILES ${PLAYER_CONFIG_FILES})
-list(APPEND SRC_FILES ${PLAYER_CODEC_FILES})
-list(APPEND SRC_FILES ${PLAYER_DEMUXER_FILES})
-list(APPEND SRC_FILES ${PLAYER_AUDIO_OUTPUT_FILES})
-list(APPEND SRC_FILES ${PLAYER_VIDEO_FILES})
-list(APPEND SRC_FILES ${PLAYER_SYNC_FILES})
-list(APPEND SRC_FILES ${PLAYER_LOADER_FILES})
-list(APPEND SRC_FILES ${PLAYER_STATS_FILES})
-list(APPEND SRC_FILES ${VIEW_FILES})
+list(APPEND SRC_FILES ${MAIN_FILES})
+list(APPEND SRC_FILES ${COMMON_FILES})
+list(APPEND SRC_FILES ${CONFIG_FILES})
+list(APPEND SRC_FILES ${APP_FILES})
+list(APPEND SRC_FILES ${TRANSPORT_FILES})
+list(APPEND SRC_FILES ${NETWORK_FILES})
+list(APPEND SRC_FILES ${CONTROL_FILES})
+list(APPEND SRC_FILES ${CORE_FILES})
+list(APPEND SRC_FILES ${MEDIA_FILES})
 
 # resource files
 # set(QRC_FILES resources/zenremote.qrc)
@@ -190,6 +186,7 @@ if (WIN32)
         d3d11.lib
         dxgi.lib
         d3dcompiler.lib
+        ws2_32.lib
     )
 endif()
 

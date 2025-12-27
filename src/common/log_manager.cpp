@@ -61,12 +61,12 @@ bool LogManager::Initialize(LogLevel log_level,
 
     initialized_ = true;
 
-    ZENPLAY_INFO("Log system initialized successfully");
-    ZENPLAY_INFO("Log level: {}",
-                 spdlog::level::to_string_view(
-                     static_cast<spdlog::level::level_enum>(log_level)));
+    ZENREMOTE_INFO("Log system initialized successfully");
+    ZENREMOTE_INFO("Log level: {}",
+                   spdlog::level::to_string_view(
+                       static_cast<spdlog::level::level_enum>(log_level)));
     if (enable_file_log) {
-      ZENPLAY_INFO("File logging enabled: {}", log_file_path);
+      ZENREMOTE_INFO("File logging enabled: {}", log_file_path);
     }
 
     return true;
@@ -78,7 +78,7 @@ bool LogManager::Initialize(LogLevel log_level,
 
 void LogManager::Shutdown() {
   if (initialized_) {
-    ZENPLAY_INFO("Shutting down log system");
+    ZENREMOTE_INFO("Shutting down log system");
     spdlog::shutdown();
     main_logger_.reset();
     initialized_ = false;
@@ -122,8 +122,8 @@ void LogManager::SetLogLevel(LogLevel level) {
     main_logger_->set_level(spdlog_level);
     spdlog::set_level(spdlog_level);
 
-    ZENPLAY_INFO("Log level changed to: {}",
-                 spdlog::level::to_string_view(spdlog_level));
+    ZENREMOTE_INFO("Log level changed to: {}",
+                   spdlog::level::to_string_view(spdlog_level));
   }
 }
 

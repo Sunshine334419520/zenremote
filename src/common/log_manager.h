@@ -44,17 +44,17 @@ class LogManager {
 }  // namespace zenremote
 
 // Convenience macros with source location
-#define ZENPLAY_TRACE(...) \
+#define ZENREMOTE_TRACE(...) \
   SPDLOG_LOGGER_TRACE(zenremote::LogManager::GetLogger(), __VA_ARGS__)
-#define ZENPLAY_DEBUG(...) \
+#define ZENREMOTE_DEBUG(...) \
   SPDLOG_LOGGER_DEBUG(zenremote::LogManager::GetLogger(), __VA_ARGS__)
-#define ZENPLAY_INFO(...) \
+#define ZENREMOTE_INFO(...) \
   SPDLOG_LOGGER_INFO(zenremote::LogManager::GetLogger(), __VA_ARGS__)
-#define ZENPLAY_WARN(...) \
+#define ZENREMOTE_WARN(...) \
   SPDLOG_LOGGER_WARN(zenremote::LogManager::GetLogger(), __VA_ARGS__)
-#define ZENPLAY_ERROR(...) \
+#define ZENREMOTE_ERROR(...) \
   SPDLOG_LOGGER_ERROR(zenremote::LogManager::GetLogger(), __VA_ARGS__)
-#define ZENPLAY_CRITICAL(...) \
+#define ZENREMOTE_CRITICAL(...) \
   SPDLOG_LOGGER_CRITICAL(zenremote::LogManager::GetLogger(), __VA_ARGS__)
 
 // Module specific log macros with source location
@@ -86,3 +86,4 @@ class LogManager {
 #define LOG_MODULE_RENDERER "Renderer"
 #define LOG_MODULE_SYNC "Sync"
 #define LOG_MODULE_STATS "Stats"
+#define LOG_MODULE_NETWORK "Network"
