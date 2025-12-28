@@ -65,9 +65,9 @@ TEST(Win32ErrorUtilsTest, MapHRESULT_UnsupportedFormat) {
 }
 
 TEST(Win32ErrorUtilsTest, MapHRESULT_BufferError) {
-  EXPECT_EQ(MapHRESULT(AUDCLNT_E_BUFFER_TOO_LARGE), ErrorCode::kBufferTooSmall);
+  EXPECT_EQ(MapHRESULT(AUDCLNT_E_BUFFER_TOO_LARGE), ErrorCode::kAudioBufferError);
   EXPECT_EQ(MapHRESULT(AUDCLNT_E_BUFFER_SIZE_ERROR),
-            ErrorCode::kBufferTooSmall);
+            ErrorCode::kAudioBufferError);
 }
 
 TEST(Win32ErrorUtilsTest, MapHRESULT_AudioOutputError) {

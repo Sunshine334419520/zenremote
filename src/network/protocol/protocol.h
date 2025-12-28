@@ -145,7 +145,7 @@ inline std::optional<HandshakePayload> ParseHandshake(const uint8_t* data,
 
 inline std::vector<uint8_t> SerializeInputEvent(const InputEvent& event) {
   std::vector<uint8_t> payload;
-  payload.reserve(18);
+  payload.reserve(17);  // 1+2+2+1+1+2+4+4 = 17 bytes
   payload.push_back(static_cast<uint8_t>(event.type));
   WriteUint16LE(event.x, payload);
   WriteUint16LE(event.y, payload);
@@ -159,7 +159,7 @@ inline std::vector<uint8_t> SerializeInputEvent(const InputEvent& event) {
 
 inline std::optional<InputEvent> ParseInputEvent(const uint8_t* data,
                                                  size_t length) {
-  if (!data || length < 18) {
+  if (!data || length < 17) {  // 1+2+2+1+1+2+4+4 = 17 bytes
     return std::nullopt;
   }
   InputEvent event;

@@ -91,7 +91,7 @@ TEST_F(ResultErrorTest, ResultErrConstruction) {
   EXPECT_TRUE(r.IsErr());
   EXPECT_EQ(r.Code(), ErrorCode::kInvalidParameter);
   EXPECT_EQ(r.Message(), "param must > 0");
-  EXPECT_STREQ(r.CodeString(), "InvalidParam");
+  EXPECT_STREQ(r.CodeString(), "InvalidParameter");
 }
 
 TEST_F(ResultErrorTest, ResultErrWithoutMessage) {
