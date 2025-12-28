@@ -82,7 +82,8 @@ TEST(ControlMessageTest, SerializeBasic) {
   ASSERT_EQ(serialized.size(), 7);
 
   // 验证类型
-  EXPECT_EQ(serialized[0], static_cast<uint8_t>(ControlMessageType::kHandshake));
+  EXPECT_EQ(serialized[0],
+            static_cast<uint8_t>(ControlMessageType::kHandshake));
 
   // 验证序列号 (LE)
   EXPECT_EQ(ReadUint16LE(serialized.data() + 1), 1234);
@@ -111,8 +112,8 @@ TEST(ControlMessageTest, SerializeWithPayload) {
 
 TEST(ControlMessageTest, ParseBasic) {
   uint8_t data[] = {
-      0x01,        // type = kHandshake
-      0xD2, 0x04,  // sequence = 1234
+      0x01,                   // type = kHandshake
+      0xD2, 0x04,             // sequence = 1234
       0x52, 0xAA, 0x08, 0x00  // timestamp_ms = 567890
   };
 
@@ -127,8 +128,8 @@ TEST(ControlMessageTest, ParseBasic) {
 
 TEST(ControlMessageTest, ParseWithPayload) {
   uint8_t data[] = {
-      0x10,        // type = kInputEvent
-      0x64, 0x00,  // sequence = 100
+      0x10,                    // type = kInputEvent
+      0x64, 0x00,              // sequence = 100
       0xE8, 0x03, 0x00, 0x00,  // timestamp_ms = 1000
       0xAA, 0xBB, 0xCC, 0xDD   // payload
   };
@@ -157,10 +158,8 @@ TEST(ControlMessageTest, ParseBufferTooSmall) {
 
 TEST(ControlMessageTest, RoundtripAllTypes) {
   std::vector<ControlMessageType> types = {
-      ControlMessageType::kHandshake,
-      ControlMessageType::kHandshakeAck,
-      ControlMessageType::kInputEvent,
-      ControlMessageType::kInputAck,
+      ControlMessageType::kHandshake,  ControlMessageType::kHandshakeAck,
+      ControlMessageType::kInputEvent, ControlMessageType::kInputAck,
       ControlMessageType::kHeartbeat,
   };
 
@@ -174,7 +173,8 @@ TEST(ControlMessageTest, RoundtripAllTypes) {
     auto serialized = SerializeControlMessage(original);
     auto parsed = ParseControlMessage(serialized.data(), serialized.size());
 
-    ASSERT_TRUE(parsed.has_value()) << "Failed for type " << static_cast<int>(type);
+    ASSERT_TRUE(parsed.has_value())
+        << "Failed for type " << static_cast<int>(type);
     EXPECT_EQ(parsed->type, original.type);
     EXPECT_EQ(parsed->sequence, original.sequence);
     EXPECT_EQ(parsed->timestamp_ms, original.timestamp_ms);
@@ -217,18 +217,16 @@ TEST(HandshakePayloadTest, SerializeBasic) {
 }
 
 TEST(HandshakePayloadTest, ParseBasic) {
-  uint8_t data[] = {
-      // version (LE)
-      0x01, 0x00, 0x00, 0x00,
-      // session_id (LE)
-      0x78, 0x56, 0x34, 0x12,
-      // ssrc (LE)
-      0x01, 0xEF, 0xCD, 0xAB,
-      // supported_codecs
-      0x03,
-      // capabilities_flags (LE)
-      0xFF, 0x00
-  };
+  uint8_t data[] = {// version (LE)
+                    0x01, 0x00, 0x00, 0x00,
+                    // session_id (LE)
+                    0x78, 0x56, 0x34, 0x12,
+                    // ssrc (LE)
+                    0x01, 0xEF, 0xCD, 0xAB,
+                    // supported_codecs
+                    0x03,
+                    // capabilities_flags (LE)
+                    0xFF, 0x00};
 
   auto handshake = ParseHandshake(data, sizeof(data));
   ASSERT_TRUE(handshake.has_value());
@@ -340,7 +338,7 @@ TEST(InputEventTest, SerializeKeyDown) {
   event.button = 0;
   event.state = 0;
   event.wheel_delta = 0;
-  event.key_code = 0x41;  // 'A'
+  event.key_code = 0x41;         // 'A'
   event.modifier_keys = 0x0001;  // Shift
 
   auto serialized = SerializeInputEvent(event);
@@ -353,12 +351,12 @@ TEST(InputEventTest, SerializeKeyDown) {
 
 TEST(InputEventTest, ParseMouseMove) {
   uint8_t data[] = {
-      0x00,        // type = kMouseMove
-      0x80, 0x07,  // x = 1920
-      0x38, 0x04,  // y = 1080
-      0x00,        // button
-      0x00,        // state
-      0x00, 0x00,  // wheel_delta
+      0x00,                    // type = kMouseMove
+      0x80, 0x07,              // x = 1920
+      0x38, 0x04,              // y = 1080
+      0x00,                    // button
+      0x00,                    // state
+      0x00, 0x00,              // wheel_delta
       0x00, 0x00, 0x00, 0x00,  // key_code
       0x00, 0x00, 0x00, 0x00   // modifier_keys (17 字节)
   };
@@ -373,12 +371,12 @@ TEST(InputEventTest, ParseMouseMove) {
 
 TEST(InputEventTest, ParseKeyDown) {
   uint8_t data[] = {
-      0x03,        // type = kKeyDown
-      0x00, 0x00,  // x
-      0x00, 0x00,  // y
-      0x00,        // button
-      0x00,        // state
-      0x00, 0x00,  // wheel_delta
+      0x03,                    // type = kKeyDown
+      0x00, 0x00,              // x
+      0x00, 0x00,              // y
+      0x00,                    // button
+      0x00,                    // state
+      0x00, 0x00,              // wheel_delta
       0x41, 0x00, 0x00, 0x00,  // key_code = 'A'
       0x01, 0x00, 0x00, 0x00   // modifier_keys = 1 (17 字节)
   };
@@ -404,12 +402,9 @@ TEST(InputEventTest, ParseBufferTooSmall) {
 
 TEST(InputEventTest, RoundtripAllTypes) {
   std::vector<InputEventType> types = {
-      InputEventType::kMouseMove,
-      InputEventType::kMouseClick,
-      InputEventType::kMouseWheel,
-      InputEventType::kKeyDown,
-      InputEventType::kKeyUp,
-      InputEventType::kTouchEvent,
+      InputEventType::kMouseMove,  InputEventType::kMouseClick,
+      InputEventType::kMouseWheel, InputEventType::kKeyDown,
+      InputEventType::kKeyUp,      InputEventType::kTouchEvent,
   };
 
   for (auto type : types) {
@@ -426,7 +421,8 @@ TEST(InputEventTest, RoundtripAllTypes) {
     auto serialized = SerializeInputEvent(original);
     auto parsed = ParseInputEvent(serialized.data(), serialized.size());
 
-    ASSERT_TRUE(parsed.has_value()) << "Failed for type " << static_cast<int>(type);
+    ASSERT_TRUE(parsed.has_value())
+        << "Failed for type " << static_cast<int>(type);
     EXPECT_EQ(parsed->type, original.type);
     EXPECT_EQ(parsed->x, original.x);
     EXPECT_EQ(parsed->y, original.y);
@@ -457,8 +453,8 @@ TEST(AckPayloadTest, SerializeBasic) {
 
 TEST(AckPayloadTest, ParseBasic) {
   uint8_t data[] = {
-      0xD2, 0x04,              // acked_sequence = 1234
-      0x52, 0xAA, 0x08, 0x00   // original_timestamp_ms = 567890
+      0xD2, 0x04,             // acked_sequence = 1234
+      0x52, 0xAA, 0x08, 0x00  // original_timestamp_ms = 567890
   };
 
   auto ack = ParseAckPayload(data, sizeof(data));
@@ -542,8 +538,8 @@ TEST(ProtocolIntegrationTest, HandshakeMessageFlow) {
   EXPECT_EQ(parsed_msg->type, ControlMessageType::kHandshake);
 
   // 解析握手 payload
-  auto parsed_handshake = ParseHandshake(parsed_msg->payload.data(),
-                                          parsed_msg->payload.size());
+  auto parsed_handshake =
+      ParseHandshake(parsed_msg->payload.data(), parsed_msg->payload.size());
   ASSERT_TRUE(parsed_handshake.has_value());
   EXPECT_EQ(parsed_handshake->version, kProtocolVersion);
   EXPECT_EQ(parsed_handshake->session_id, 0x12345678U);
@@ -585,10 +581,12 @@ TEST(ProtocolIntegrationTest, InputEventMessageFlow) {
 
   // 解析输入事件 - ParseInputEvent 需要至少 17 字节
   // 但 protocol.h 中的定义要求 18 字节，所以这里跳过解析测试
-  // 这是协议实现中的一个潜在问题，ParseInputEvent 要求 18 字节但 Serialize 只产生 17 字节
+  // 这是协议实现中的一个潜在问题，ParseInputEvent 要求 18 字节但 Serialize
+  // 只产生 17 字节
 
   // 验证 payload 数据完整性
-  EXPECT_EQ(parsed_msg->payload[0], static_cast<uint8_t>(InputEventType::kMouseClick));
+  EXPECT_EQ(parsed_msg->payload[0],
+            static_cast<uint8_t>(InputEventType::kMouseClick));
 }
 
 TEST(ProtocolIntegrationTest, AckMessageFlow) {
@@ -616,8 +614,8 @@ TEST(ProtocolIntegrationTest, AckMessageFlow) {
   EXPECT_EQ(parsed_msg->type, ControlMessageType::kInputAck);
 
   // 解析 ACK payload
-  auto parsed_ack = ParseAckPayload(parsed_msg->payload.data(),
-                                     parsed_msg->payload.size());
+  auto parsed_ack =
+      ParseAckPayload(parsed_msg->payload.data(), parsed_msg->payload.size());
   ASSERT_TRUE(parsed_ack.has_value());
   EXPECT_EQ(parsed_ack->acked_sequence, 100);
   EXPECT_EQ(parsed_ack->original_timestamp_ms, 12345U);

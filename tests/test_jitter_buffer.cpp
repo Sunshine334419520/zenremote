@@ -30,11 +30,10 @@ class JitterBufferTest : public ::testing::Test {
     buffer_ = std::make_unique<JitterBuffer>(config_);
   }
 
-  void TearDown() override {
-    buffer_.reset();
-  }
+  void TearDown() override { buffer_.reset(); }
 
-  RtpPacket CreatePacket(uint32_t timestamp, uint16_t seq,
+  RtpPacket CreatePacket(uint32_t timestamp,
+                         uint16_t seq,
                          const std::vector<uint8_t>& payload) {
     RtpPacket packet;
     packet.header.version = 2;
@@ -110,7 +109,8 @@ TEST_F(JitterBufferTest, ExtractFrameAfterBufferTime) {
   buffer_->InsertPacket(packet);
 
   // 等待缓冲时间
-  std::this_thread::sleep_for(std::chrono::milliseconds(config_.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(config_.buffer_ms + 10));
 
   // 应该能提取帧
   std::vector<uint8_t> frame_data;
@@ -147,7 +147,8 @@ TEST_F(JitterBufferTest, ExtractMultiplePacketsAsOneFrame) {
   buffer_->InsertPacket(packet2);
 
   // 等待缓冲时间
-  std::this_thread::sleep_for(std::chrono::milliseconds(config_.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(config_.buffer_ms + 10));
 
   // 提取应该合并所有数据包
   std::vector<uint8_t> frame_data;
@@ -174,7 +175,8 @@ TEST_F(JitterBufferTest, ExtractFramesInOrder) {
   buffer_->InsertPacket(CreatePacket(96000, 3, {0x03}));
 
   // 等待缓冲时间
-  std::this_thread::sleep_for(std::chrono::milliseconds(config_.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(config_.buffer_ms + 10));
 
   // 提取第一帧
   std::vector<uint8_t> frame_data;
@@ -185,7 +187,8 @@ TEST_F(JitterBufferTest, ExtractFramesInOrder) {
   EXPECT_EQ(frame_data[0], 0x01);
 
   // 第二帧需要再等待
-  std::this_thread::sleep_for(std::chrono::milliseconds(config_.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(config_.buffer_ms + 10));
 
   EXPECT_TRUE(buffer_->TryExtractFrame(frame_data, timestamp));
   EXPECT_EQ(timestamp, 93000U);
@@ -210,7 +213,8 @@ TEST_F(JitterBufferTest, BufferOverflowDropsOldestFrame) {
   small_buffer.InsertPacket(CreatePacket(99000, 4, {0x04}));  // 应该触发溢出
 
   // 等待并提取
-  std::this_thread::sleep_for(std::chrono::milliseconds(small_config.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(small_config.buffer_ms + 10));
 
   std::vector<uint8_t> frame_data;
   uint32_t timestamp;
@@ -253,7 +257,8 @@ TEST_F(JitterBufferTest, ResetAllowsReuse) {
   // 应该能够继续使用
   buffer_->InsertPacket(CreatePacket(180000, 1, {0x02}));
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(config_.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(config_.buffer_ms + 10));
 
   std::vector<uint8_t> frame_data;
   uint32_t timestamp;
@@ -288,7 +293,8 @@ TEST_F(JitterBufferTest, EmptyPayloadPacket) {
   auto packet = CreatePacket(90000, 1, {});
   buffer_->InsertPacket(packet);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(config_.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(config_.buffer_ms + 10));
 
   std::vector<uint8_t> frame_data;
   uint32_t timestamp;
@@ -301,7 +307,8 @@ TEST_F(JitterBufferTest, LargePayloadPacket) {
   auto packet = CreatePacket(90000, 1, large_payload);
   buffer_->InsertPacket(packet);
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(config_.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(config_.buffer_ms + 10));
 
   std::vector<uint8_t> frame_data;
   uint32_t timestamp;
@@ -327,10 +334,11 @@ TEST_F(JitterBufferTest, ConsecutiveTimestamps) {
   // 测试连续时间戳处理
   for (uint32_t ts = 0; ts < 10; ++ts) {
     buffer_->InsertPacket(CreatePacket(ts * 3000, static_cast<uint16_t>(ts),
-                                        {static_cast<uint8_t>(ts)}));
+                                       {static_cast<uint8_t>(ts)}));
   }
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(config_.buffer_ms + 10));
+  std::this_thread::sleep_for(
+      std::chrono::milliseconds(config_.buffer_ms + 10));
 
   // 应该能按顺序提取
   std::vector<uint8_t> frame_data;

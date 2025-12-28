@@ -125,11 +125,11 @@ TEST(RtpHeaderSerializeTest, WithPaddingAndExtension) {
   ASSERT_TRUE(SerializeRtpHeader(header, buffer.data(), buffer.size()));
 
   // 验证各标志位
-  EXPECT_EQ((buffer[0] >> 6) & 0x03, 2);   // version
-  EXPECT_EQ((buffer[0] >> 5) & 0x01, 1);   // padding
-  EXPECT_EQ((buffer[0] >> 4) & 0x01, 1);   // extension
-  EXPECT_EQ(buffer[0] & 0x0F, 5);          // csrc_count
-  EXPECT_EQ((buffer[1] >> 7) & 0x01, 1);   // marker
+  EXPECT_EQ((buffer[0] >> 6) & 0x03, 2);  // version
+  EXPECT_EQ((buffer[0] >> 5) & 0x01, 1);  // padding
+  EXPECT_EQ((buffer[0] >> 4) & 0x01, 1);  // extension
+  EXPECT_EQ(buffer[0] & 0x0F, 5);         // csrc_count
+  EXPECT_EQ((buffer[1] >> 7) & 0x01, 1);  // marker
 }
 
 TEST(RtpHeaderSerializeTest, BufferTooSmall) {
@@ -154,8 +154,8 @@ TEST(RtpHeaderParseTest, BasicParse) {
   // 构造一个已知的 RTP 头部
   // 注意：代码使用 HostToNetwork 转换后再手动提取字节，所以字节是反转的
   std::array<uint8_t, kRtpHeaderSize> buffer = {
-      0x80,  // version=2, padding=0, extension=0, csrc_count=0
-      0x60,  // marker=0, payload_type=96 (H264)
+      0x80,        // version=2, padding=0, extension=0, csrc_count=0
+      0x60,        // marker=0, payload_type=96 (H264)
       0xD2, 0x04,  // sequence_number=1234 (经过 HostToNetwork16 转换)
       0x90, 0x5F, 0x01, 0x00,  // timestamp=90000 (经过 HostToNetwork32 转换)
       0x78, 0x56, 0x34, 0x12   // ssrc=0x12345678 (经过 HostToNetwork32 转换)
@@ -178,9 +178,9 @@ TEST(RtpHeaderParseTest, BasicParse) {
 TEST(RtpHeaderParseTest, WithMarkerBit) {
   // 注意：代码使用 HostToNetwork 转换后再手动提取字节
   std::array<uint8_t, kRtpHeaderSize> buffer = {
-      0x80,  // version=2
-      0xE1,  // marker=1, payload_type=97 (Opus)
-      0xFF, 0xFF,  // sequence_number=65535 (转换后不变)
+      0x80,                    // version=2
+      0xE1,                    // marker=1, payload_type=97 (Opus)
+      0xFF, 0xFF,              // sequence_number=65535 (转换后不变)
       0xFF, 0xFF, 0xFF, 0xFF,  // timestamp=max (转换后不变)
       0xEF, 0xBE, 0xAD, 0xDE   // ssrc=0xDEADBEEF (经过 HostToNetwork32 转换)
   };
@@ -362,9 +362,9 @@ TEST(RtpPacketTest, ParseWithPayload) {
 
 TEST(RtpPacketTest, ParseEmptyPayload) {
   std::vector<uint8_t> data = {
-      0x80,              // version=2
-      0x61,              // marker=0, payload_type=97
-      0x00, 0x01,        // sequence_number=1
+      0x80,                    // version=2
+      0x61,                    // marker=0, payload_type=97
+      0x00, 0x01,              // sequence_number=1
       0x00, 0x00, 0x00, 0x01,  // timestamp=1
       0x00, 0x00, 0x00, 0x01   // ssrc=1
   };

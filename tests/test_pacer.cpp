@@ -28,9 +28,7 @@ class PacerTest : public ::testing::Test {
     pacer_ = std::make_unique<Pacer>(config_);
   }
 
-  void TearDown() override {
-    pacer_.reset();
-  }
+  void TearDown() override { pacer_.reset(); }
 
   Pacer::Config config_;
   std::unique_ptr<Pacer> pacer_;
@@ -288,8 +286,8 @@ TEST_F(PacerTest, ContinuousSending) {
   // 在 50ms 内应该能发送相当数量的数据包
   // 基于配置：5ms 间隔，每批 10 个
   // 放宽要求，因为系统调度可能有延迟
-  EXPECT_GT(packets_sent, 20);  // 至少 20 个
-  EXPECT_LE(packets_sent, 200); // 不超过 200 个
+  EXPECT_GT(packets_sent, 20);   // 至少 20 个
+  EXPECT_LE(packets_sent, 200);  // 不超过 200 个
 }
 
 TEST_F(PacerTest, BurstThenPause) {

@@ -20,16 +20,13 @@ namespace zenremote {
 
 class RTPReceiverTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-    receiver_ = std::make_unique<RTPReceiver>();
-  }
+  void SetUp() override { receiver_ = std::make_unique<RTPReceiver>(); }
 
-  void TearDown() override {
-    receiver_.reset();
-  }
+  void TearDown() override { receiver_.reset(); }
 
   // 创建有效的 RTP 数据包字节流
-  std::vector<uint8_t> CreateRawPacket(uint16_t seq, uint32_t timestamp,
+  std::vector<uint8_t> CreateRawPacket(uint16_t seq,
+                                       uint32_t timestamp,
                                        PayloadType payload_type,
                                        const std::vector<uint8_t>& payload) {
     RtpPacket packet;
@@ -68,8 +65,8 @@ TEST_F(RTPReceiverTest, ParseValidVideoPacket) {
 }
 
 TEST_F(RTPReceiverTest, ParseValidAudioPacket) {
-  auto raw = CreateRawPacket(200, 48000, PayloadType::kAudioOpus,
-                             {0xAA, 0xBB, 0xCC});
+  auto raw =
+      CreateRawPacket(200, 48000, PayloadType::kAudioOpus, {0xAA, 0xBB, 0xCC});
 
   auto packet = receiver_->ParsePacket(raw.data(), raw.size());
   ASSERT_TRUE(packet.has_value());
@@ -79,8 +76,7 @@ TEST_F(RTPReceiverTest, ParseValidAudioPacket) {
 }
 
 TEST_F(RTPReceiverTest, ParseValidControlPacket) {
-  auto raw = CreateRawPacket(1, 1000, PayloadType::kControl,
-                             {0x01, 0x02});
+  auto raw = CreateRawPacket(1, 1000, PayloadType::kControl, {0x01, 0x02});
 
   auto packet = receiver_->ParsePacket(raw.data(), raw.size());
   ASSERT_TRUE(packet.has_value());
@@ -104,23 +100,26 @@ TEST_F(RTPReceiverTest, ParseNullBuffer) {
 
 TEST_F(RTPReceiverTest, ParseBufferTooSmall) {
   std::vector<uint8_t> small_buffer(kRtpHeaderSize - 1, 0);
-  auto packet = receiver_->ParsePacket(small_buffer.data(), small_buffer.size());
+  auto packet =
+      receiver_->ParsePacket(small_buffer.data(), small_buffer.size());
   EXPECT_FALSE(packet.has_value());
 }
 
 TEST_F(RTPReceiverTest, ParseInvalidHeader) {
   // 创建一个无效的头部（可能会被拒绝的数据）
   std::vector<uint8_t> invalid_buffer(kRtpHeaderSize, 0xFF);
-  
+
   // 解析可能成功或失败，取决于具体实现
   // 这里主要测试不会崩溃
-  auto packet = receiver_->ParsePacket(invalid_buffer.data(), invalid_buffer.size());
+  auto packet =
+      receiver_->ParsePacket(invalid_buffer.data(), invalid_buffer.size());
   // 不对结果做断言，只确保不崩溃
 }
 
 TEST_F(RTPReceiverTest, ParseLargePayload) {
   std::vector<uint8_t> large_payload(10000, 0xAA);
-  auto raw = CreateRawPacket(999, 900000, PayloadType::kVideoH264, large_payload);
+  auto raw =
+      CreateRawPacket(999, 900000, PayloadType::kVideoH264, large_payload);
 
   auto packet = receiver_->ParsePacket(raw.data(), raw.size());
   ASSERT_TRUE(packet.has_value());
@@ -220,7 +219,7 @@ TEST_F(RTPReceiverTest, StatsAfterMultipleParsing) {
   const auto& stats = receiver_->GetStats();
   EXPECT_EQ(stats.packets_received, 10U);
   EXPECT_EQ(stats.bytes_received, 20U);  // 10 * 2 bytes
-  EXPECT_EQ(stats.packets_lost, 0U);  // 没有丢包
+  EXPECT_EQ(stats.packets_lost, 0U);     // 没有丢包
   EXPECT_EQ(stats.last_sequence_number, 9);
 }
 
@@ -286,7 +285,8 @@ TEST_F(RTPReceiverTest, DifferentPayloadTypes) {
     auto raw = CreateRawPacket(1, 1000, type, {0x00});
     auto packet = receiver_->ParsePacket(raw.data(), raw.size());
 
-    ASSERT_TRUE(packet.has_value()) << "Failed for type " << static_cast<int>(type);
+    ASSERT_TRUE(packet.has_value())
+        << "Failed for type " << static_cast<int>(type);
     EXPECT_EQ(packet->header.payload_type, type);
   }
 }
@@ -299,7 +299,8 @@ TEST_F(RTPReceiverTest, MultipleParseCallsSequential) {
   // 模拟快速连续解析
   for (int i = 0; i < 1000; ++i) {
     auto raw = CreateRawPacket(static_cast<uint16_t>(i), 90000 + i * 3000,
-                               PayloadType::kVideoH264, {static_cast<uint8_t>(i & 0xFF)});
+                               PayloadType::kVideoH264,
+                               {static_cast<uint8_t>(i & 0xFF)});
     auto packet = receiver_->ParsePacket(raw.data(), raw.size());
     ASSERT_TRUE(packet.has_value()) << "Failed at iteration " << i;
   }
