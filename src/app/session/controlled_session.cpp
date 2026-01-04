@@ -1,8 +1,8 @@
 #include "controlled_session.h"
 
-#include <spdlog/spdlog.h>
-
 #include <cstring>
+
+#include "common/log_manager.h"
 
 namespace zenremote {
 
@@ -65,7 +65,7 @@ Result<void> ControlledSession::Initialize(const Config& config) {
                              "Failed to connect: " + result.Message());
   }
 
-  spdlog::info("ControlledSession initialized and waiting for connection");
+  ZENREMOTE_INFO("ControlledSession initialized and waiting for connection");
   return Result<void>::Ok();
 }
 
@@ -77,7 +77,7 @@ void ControlledSession::Shutdown() {
 
   input_channel_.reset();
 
-  spdlog::info("ControlledSession shut down");
+  ZENREMOTE_INFO("ControlledSession shut down");
 }
 
 Result<void> ControlledSession::SendMouseMove(int x, int y) {
@@ -137,7 +137,7 @@ Result<void> ControlledSession::SendKeyEvent(uint32_t key_code,
 }
 
 void ControlledSession::OnRemoteTrackAdded(std::shared_ptr<MediaTrack> track) {
-  spdlog::info(
+  ZENREMOTE_INFO(
       "Remote track added: {}, kind: {}", track->GetId(),
       track->GetKind() == MediaTrack::Kind::kVideo ? "video" : "audio");
 
@@ -160,12 +160,12 @@ void ControlledSession::OnRemoteTrackAdded(std::shared_ptr<MediaTrack> track) {
 
 void ControlledSession::OnRemoteDataChannel(
     std::shared_ptr<DataChannel> channel) {
-  spdlog::info("Remote DataChannel: {}", channel->GetLabel());
+  ZENREMOTE_INFO("Remote DataChannel: {}", channel->GetLabel());
 
   if (channel->GetLabel() == "input") {
     input_channel_ = channel;
     channel->SetOnOpenCallback(
-        [this]() { spdlog::info("Input channel opened"); });
+        [this]() { ZENREMOTE_INFO("Input channel opened"); });
   }
 }
 

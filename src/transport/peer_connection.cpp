@@ -1,10 +1,9 @@
 #include "peer_connection.h"
 
-#include <spdlog/spdlog.h>
-
 #include <algorithm>
 
 #include "channel/reliable_channel.h"
+#include "common/log_manager.h"
 #include "network/connection/base_connection.h"
 #include "network/connection/direct_connection.h"
 
@@ -77,7 +76,7 @@ Result<void> PeerConnection::Connect() {
   should_stop_ = false;
   receive_thread_ = std::make_unique<std::thread>([this]() { ReceiveLoop(); });
 
-  spdlog::info("PeerConnection connected");
+  ZENREMOTE_INFO("PeerConnection connected");
   return Result<void>::Ok();
 }
 
@@ -102,7 +101,7 @@ void PeerConnection::Disconnect() {
   connection_->Close();
   connection_.reset();
 
-  spdlog::info("PeerConnection disconnected");
+  ZENREMOTE_INFO("PeerConnection disconnected");
 }
 
 bool PeerConnection::IsConnected() const {
@@ -128,7 +127,7 @@ Result<void> PeerConnection::AddTrack(std::shared_ptr<MediaTrack> track) {
     track->SetConnection(connection_.get());
   }
 
-  spdlog::info("Added track: {}", track->GetId());
+  ZENREMOTE_INFO("Added track: {}", track->GetId());
   return Result<void>::Ok();
 }
 
@@ -144,7 +143,7 @@ Result<void> PeerConnection::RemoveTrack(const std::string& track_id) {
   (*it)->SetConnection(nullptr);
   tracks_.erase(it);
 
-  spdlog::info("Removed track: {}", track_id);
+  ZENREMOTE_INFO("Removed track: {}", track_id);
   return Result<void>::Ok();
 }
 
@@ -175,7 +174,7 @@ Result<std::shared_ptr<DataChannel>> PeerConnection::CreateDataChannel(
     channel->SetConnection(connection_.get());
   }
 
-  spdlog::info("Created DataChannel: {}", label);
+  ZENREMOTE_INFO("Created DataChannel: {}", label);
   return Result<std::shared_ptr<DataChannel>>::Ok(channel);
 }
 
@@ -207,7 +206,7 @@ void PeerConnection::ReceiveLoop() {
 }
 
 void PeerConnection::ProcessReceivedPacket(const uint8_t* data, size_t length) {
-  spdlog::debug("Received {} bytes", length);
+  ZENREMOTE_DEBUG("Received {} bytes", length);
 }
 
 }  // namespace zenremote

@@ -4,8 +4,7 @@
 #include <dxgi1_2.h>
 #include <wrl/client.h>
 
-#include <chrono>
-
+#include "common/timer_util.h"
 #include "screen_capturer.h"
 
 namespace zenremote::media::capture {
@@ -77,7 +76,7 @@ class ScreenCapturerDxgi : public ScreenCapturer {
   bool should_force_key_frame_;
 
   // 帧率统计
-  std::chrono::steady_clock::time_point last_fps_update_time_;
+  TimerUtil fps_timer_{};
 
   // 当前映射的资源(用于 Unmap)
   D3D11_MAPPED_SUBRESOURCE last_mapped_resource_;

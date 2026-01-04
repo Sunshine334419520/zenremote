@@ -165,6 +165,8 @@ Windows:
 
 #### 3.2.2 参考 zenplay 实现
 
+zenplay项目地址:https://github.com/Sunshine334419520/zenplay/tree/main
+
 从 zenplay 项目迁移以下核心文件：
 
 ```

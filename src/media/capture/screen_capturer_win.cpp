@@ -12,7 +12,7 @@ namespace zenremote::media::capture {
 
 namespace {
 
-constexpr UINT CAPTURE_TIMEOUT_MS = 1000;  // 1 秒超�?防止死锁
+constexpr UINT CAPTURE_TIMEOUT_MS = 1000;  // 1 秒超时: 防止死锁
 
 std::string HrToString(HRESULT hr) {
   switch (hr) {
@@ -71,7 +71,7 @@ bool ScreenCapturerDxgi::Initialize(const CaptureConfig& config) {
     return false;
   }
 
-  // Step 2: 枚举 GPU 适配�?选择最优的(通常是独立显�?
+  // Step 2: 枚举 GPU 适配器: 选择最优的(通常是独立显卡)
   IDXGIAdapter* adapter = SelectBestAdapter(factory);
   if (!adapter) {
     ZENREMOTE_ERROR("No suitable GPU adapter found");
@@ -95,7 +95,7 @@ bool ScreenCapturerDxgi::Initialize(const CaptureConfig& config) {
 
   ZENREMOTE_INFO("D3D11 device created successfully");
 
-  // Step 4: 获取 DXGI 输出(显示�?
+  // Step 4: 获取 DXGI 输出(显示器)
   if (!GetDxgiOutput(config.output_index)) {
     d3d_context_->Release();
     d3d_device_->Release();
@@ -137,7 +137,7 @@ bool ScreenCapturerDxgi::Start() {
 
   is_running_ = true;
   frame_count_ = 0;
-  last_fps_update_time_ = std::chrono::steady_clock::now();
+  fps_timer_.Reset();
 
   ZENREMOTE_INFO("ScreenCapturerDxgi started");
   return true;
@@ -156,11 +156,11 @@ std::optional<Frame> ScreenCapturerDxgi::CaptureFrame() {
   DXGI_OUTDUPL_FRAME_INFO frame_info{};
   IDXGIResource* frame_resource = nullptr;
 
-  // 获取下一�?使用固定 1 秒超�?
+  // 获取下一帧: 使用固定 1 秒超时
   HRESULT hr =
       dxgi_output_dup_->AcquireNextFrame(1000, &frame_info, &frame_resource);
 
-  // 处理各种返回�?
+  // 处理各种返回状态
   if (hr == DXGI_ERROR_WAIT_TIMEOUT) {
     // 正常情况:没有新帧,等待超时
     return std::nullopt;
@@ -183,8 +183,8 @@ std::optional<Frame> ScreenCapturerDxgi::CaptureFrame() {
     return std::nullopt;
   }
 
-  // 成功获得�?
-  // 注意: frame_resource 的生命周期只�?ReleaseFrame(),必须立即复制
+  // 成功获得帧
+  // 注意: frame_resource 的生命周期只到 ReleaseFrame(),必须立即复制
 
   ID3D11Texture2D* frame_texture = nullptr;
   hr = frame_resource->QueryInterface(IID_PPV_ARGS(&frame_texture));
@@ -197,11 +197,11 @@ std::optional<Frame> ScreenCapturerDxgi::CaptureFrame() {
     return std::nullopt;
   }
 
-  // 复制�?Staging Texture(CPU 可访�?
+  // 复制到 Staging Texture(CPU 可访问)
   d3d_context_->CopyResource(staging_texture_, frame_texture);
   frame_texture->Release();
 
-  // 映射 Staging Texture 以获取像素数�?
+  // 映射 Staging Texture 以获取像素数据
   D3D11_MAPPED_SUBRESOURCE mapped_resource{};
   hr = d3d_context_->Map(staging_texture_, 0, D3D11_MAP_READ, 0,
                          &mapped_resource);
@@ -221,7 +221,7 @@ std::optional<Frame> ScreenCapturerDxgi::CaptureFrame() {
   frame.data = static_cast<const uint8_t*>(mapped_resource.pData);
   frame.size = height_ * mapped_resource.RowPitch;
 
-  // 构建元数�?
+  // 构建元数据
   frame.metadata.timestamp_us =
       std::chrono::duration_cast<std::chrono::microseconds>(
           std::chrono::steady_clock::now().time_since_epoch())
@@ -232,11 +232,11 @@ std::optional<Frame> ScreenCapturerDxgi::CaptureFrame() {
 
   frame.metadata.accumulated_frames = frame_info.AccumulatedFrames;
 
-  // 处理脏区�?
+  // 处理脏区域
   if (config_.enable_dirty_rect) {
     ExtractDirtyRects(frame_info, &frame.metadata);
   } else {
-    // 没有脏区�?整个屏幕被标记为需要编�?
+    // 没有脏区域: 整个屏幕被标记为需要编码
     frame.metadata.dirty_rects.push_back({0, 0, width_, height_});
   }
 
@@ -245,7 +245,7 @@ std::optional<Frame> ScreenCapturerDxgi::CaptureFrame() {
     ExtractMoveRects(frame_info, &frame.metadata);
   }
 
-  // 计算脏区域比�?
+  // 计算脏区域比例
   float dirty_area = 0;
   for (const auto& rect : frame.metadata.dirty_rects) {
     dirty_area += static_cast<float>(rect.Width() * rect.Height());
@@ -256,7 +256,7 @@ std::optional<Frame> ScreenCapturerDxgi::CaptureFrame() {
   frame_count_++;
   UpdateFpsCounter();
 
-  // 注意: 此时 staging_texture_ 仍被映射,需要在 ReleaseFrame() �?Unmap
+  // 注意: 此时 staging_texture_ 仍被映射,需要在 ReleaseFrame() 后 Unmap
   last_mapped_resource_ = mapped_resource;
 
   return frame;
@@ -266,7 +266,7 @@ void ScreenCapturerDxgi::ReleaseFrame() {
   // Unmap staging texture
   d3d_context_->Unmap(staging_texture_, 0);
 
-  // 释放当前帧给 DXGI 驱动,允许下一帧到�?
+  // 释放当前帧给 DXGI 驱动,允许下一帧到来
   if (dxgi_output_dup_) {
     dxgi_output_dup_->ReleaseFrame();
   }
@@ -377,7 +377,7 @@ IDXGIAdapter* ScreenCapturerDxgi::SelectBestAdapter(IDXGIFactory1* factory) {
 }
 
 bool ScreenCapturerDxgi::GetDxgiOutput(uint32_t output_index) {
-  // 获取�?D3D 设备关联�?DXGI Device
+  // 获取与 D3D 设备关联的 DXGI Device
   IDXGIDevice* dxgi_device = nullptr;
   HRESULT hr = d3d_device_->QueryInterface(IID_PPV_ARGS(&dxgi_device));
   if (FAILED(hr)) {
@@ -395,7 +395,7 @@ bool ScreenCapturerDxgi::GetDxgiOutput(uint32_t output_index) {
     return false;
   }
 
-  // 枚举输出(显示�?,直到找到目标索引
+  // 枚举输出(显示器),直到找到目标索引
   IDXGIOutput* current_output = nullptr;
   for (uint32_t i = 0; adapter->EnumOutputs(i, &current_output) == S_OK; ++i) {
     if (i == output_index) {
@@ -418,7 +418,7 @@ bool ScreenCapturerDxgi::GetDxgiOutput(uint32_t output_index) {
 }
 
 bool ScreenCapturerDxgi::CreateDesktopDuplication() {
-  // �?IDXGIOutput 转换�?IDXGIOutput1
+  // 将 IDXGIOutput 转换为 IDXGIOutput1
   IDXGIOutput1* output1 = nullptr;
   HRESULT hr = output_->QueryInterface(IID_PPV_ARGS(&output1));
 
@@ -430,7 +430,7 @@ bool ScreenCapturerDxgi::CreateDesktopDuplication() {
 
   // 创建 Desktop Duplication
   // 参数:
-  //   - d3d_device_: 用于创建 GPU 资源的设�?
+  //   - d3d_device_: 用于创建 GPU 资源的设备
   //   - ppDesktopImageOut: 输出参数,返回 IDXGIOutputDuplication 对象
   hr = output1->DuplicateOutput(d3d_device_, &dxgi_output_dup_);
   output1->Release();
@@ -448,7 +448,7 @@ bool ScreenCapturerDxgi::CreateDesktopDuplication() {
 }
 
 bool ScreenCapturerDxgi::SetupFrameBuffer() {
-  // 获取输出描述(包含分辨�?
+  // 获取输出描述(包含分辨率)
   DXGI_OUTPUT_DESC output_desc;
   output_->GetDesc(&output_desc);
 
@@ -481,7 +481,7 @@ bool ScreenCapturerDxgi::SetupFrameBuffer() {
     return false;
   }
 
-  // 计算步长(一行的字节�?
+  // 计算步长(一行的字节数)
   stride_ = width_ * 4;  // BGRA32 = 4 bytes per pixel
 
   ZENREMOTE_INFO("Frame buffer setup: {}x{}, stride={}", width_, height_,
@@ -495,7 +495,7 @@ void ScreenCapturerDxgi::ExtractDirtyRects(
   // 获取脏区域元数据
   UINT metadata_buffer_size = frame_info.TotalMetadataBufferSize;
   if (metadata_buffer_size == 0) {
-    // 没有脏区域信�?整屏标记为脏
+    // 没有脏区域信息: 整屏标记为脏
     metadata->dirty_rects.push_back({0, 0, width_, height_});
     return;
   }
@@ -515,7 +515,7 @@ void ScreenCapturerDxgi::ExtractDirtyRects(
     return;
   }
 
-  // 获取脏矩�?
+  // 获取脏矩形
   UINT dirty_rects_size = 0;
   hr = dxgi_output_dup_->GetFrameDirtyRects(
       metadata_buffer.size() - move_rects_size,
@@ -528,7 +528,7 @@ void ScreenCapturerDxgi::ExtractDirtyRects(
     return;
   }
 
-  // �?RECT 转换�?DirtyRect
+  // 将 RECT 转换为 DirtyRect
   RECT* dirty_rects =
       reinterpret_cast<RECT*>(metadata_buffer.data() + move_rects_size);
   uint32_t dirty_rect_count = dirty_rects_size / sizeof(RECT);
@@ -581,14 +581,12 @@ void ScreenCapturerDxgi::ExtractMoveRects(
 }
 
 void ScreenCapturerDxgi::UpdateFpsCounter() {
-  auto now = std::chrono::steady_clock::now();
-  auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-      now - last_fps_update_time_);
+  const int64_t elapsed_ms = fps_timer_.ElapsedMsInt();
 
-  if (elapsed.count() >= 1000) {  // 每秒更新一�?
-    current_fps_ = frame_count_ * 1000 / elapsed.count();
+  if (elapsed_ms >= 1000) {  // 每秒更新一次
+    current_fps_ = static_cast<uint32_t>(frame_count_ * 1000 / elapsed_ms);
     frame_count_ = 0;
-    last_fps_update_time_ = now;
+    fps_timer_.Reset();
     ZENREMOTE_DEBUG("Capture FPS: {}", current_fps_);
   }
 }
